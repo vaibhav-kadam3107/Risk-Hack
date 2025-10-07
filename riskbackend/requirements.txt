@@ -2,4 +2,6 @@ fastapi
 strawberry-graphql
 pymongo
 uvicorn
+graphql
 python-dotenv
+requests
