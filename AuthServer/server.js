@@ -18,7 +18,7 @@ app.use(CORS({
 const ITSO = require("./model/ITSO");
 const Dev = require("./model/Dev");
 const Account = require("./model/Account");
-
+const Quiz=require('./model/Quiz');
 
 
 mongoose.connect("mongodb://localhost:27017/RISK_HACK").then(()=>{
@@ -145,6 +145,147 @@ app.get("/itso/:email/devs", async (req, res) => {
   } catch (err) {
     console.error("Error fetching ITSO developers:", err);
     res.status(500).json({ message: "Server error" });
+  }
+});
+
+app.post("/api/quizzes", async (req, res) => {
+  try {
+    const quiz = new Quiz(req.body);
+    await quiz.save();
+    res.status(201).json({ message: "Quiz created successfully", quiz });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+app.post("/update-after-quiz", async (req, res) => {
+  try {
+    const { email, score, quizTitle, questions } = req.body;
+
+    let dev = await Dev.findOne({ email });
+    if (!dev) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    if (score > dev.highScore) {
+      dev.highScore = score;
+    }
+
+    dev.testsTaken.push({
+      quizTitle,
+      score,
+      questions,
+    });
+
+    await dev.save();
+    res.json({ message: "User updated successfully", dev });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post("/badges/update", async (req, res) => {
+  try {
+    const { email, badges } = req.body;
+
+    if (!email || !Array.isArray(badges)) {
+      return res.status(400).json({ error: "Invalid request format" });
+    }
+
+    // Find the user by email
+    const dev = await Dev.findOne({ email });
+    if (!dev) {
+      return res.status(404).json({ error: "Dev not found" });
+    }
+
+    // Merge new badges with existing ones (prevent duplicates)
+    const updatedBadges = Array.from(new Set([...(dev.badges || []), ...badges]));
+
+    // Save to DB
+    dev.badges = updatedBadges;
+    await dev.save();
+
+    res.json({ success: true, badges: updatedBadges });
+  } catch (err) {
+    console.error("Error updating badges:", err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+app.get("/api/quizzes", async (req, res) => {
+  try {
+    const quizzes = await Quiz.find();
+    res.json(quizzes);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+
+app.post("/api/quizzes/:id/review", async (req, res) => {
+  try {
+    const { id } = req.params
+    const { reviewerName, reviewerEmail, content, remarks } = req.body
+
+    if (!reviewerName || !reviewerEmail || !content) {
+      return res.status(400).json({ error: "Missing required fields" })
+    }
+
+    const review = {
+      reviewerName,
+      reviewerEmail,
+      content,
+      remarks: remarks || [],
+      createdAt: new Date()
+    }
+
+    // Push review into quiz doc
+    const updatedQuiz = await Quiz.findByIdAndUpdate(
+      id,
+      { $push: { reviews: review } },
+      { new: true }
+    )
+
+    if (!updatedQuiz) {
+      return res.status(404).json({ error: "Quiz not found" })
+    }
+
+    res.json({ message: "Review added successfully", quiz: updatedQuiz })
+  } catch (err) {
+    console.error("Error adding review:", err)
+    res.status(500).json({ error: "Server error", details: err.message })
+  }
+})
+
+app.get("/leaderboard", async (req, res) => {
+  try {
+   
+    const devs = await Dev.find({})
+      .sort({ highScore: -1 })
+      .limit(50);
+
+    
+    const leaderboard = devs.map((u, index) => ({
+      rank: index + 1,
+      name: u.name,
+      team: u.team,
+      score: u.highScore,
+      quizzes: u.testsTaken?.length || 0,
+      trend: "same",
+      badge:
+        u.highScore >= 35
+          ? "Elite"
+          : u.highScore >= 30
+          ? "High"
+          : u.highScore >= 25
+          ? "Medium"
+          : "Starter",
+    }));
+
+    res.json(leaderboard);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to fetch leaderboard" });
   }
 });
 
