@@ -73,6 +73,16 @@ class QuizEvaluation:
     score: Optional[float]
     feedback: str
 
+@strawberry.type
+class QuizAnswer:
+    questionId: str
+    answer: str
+
+@strawberry.type
+class QuizResponse:
+    quiz_id: strawberry.ID
+    answers: List[QuizAnswer]
+
 # --- User ---
 @strawberry.type
 class User:
@@ -84,6 +94,7 @@ class User:
     badges: List[Badge]
     team: Optional[Team]
     peer_reviews: Optional[List[PeerReview]] = None
+    quiz_responses: Optional[List[QuizResponse]] = None
 
 # --- Query ---
 @strawberry.type
@@ -97,6 +108,13 @@ class Query:
         team = user.get("team")
         team_obj = Team(**team) if team else None
         peer_reviews = [PeerReview(**r) for r in user.get("peer_reviews", [])] if "peer_reviews" in user else []
+        quiz_responses = [
+            QuizResponse(
+                quiz_id=qr.get("quiz_id"),
+                answers=[QuizAnswerInput(questionId=qid, answer=ans) for qid, ans in qr.get("answers", {}).items()]
+            )
+            for qr in user.get("quiz_responses", [])
+        ]
         return User(
             id=str(user["_id"]),
             username=user["username"],
@@ -105,7 +123,14 @@ class Query:
             score=user.get("score", 0),
             badges=badges,
             team=team_obj,
-            peer_reviews=peer_reviews
+            peer_reviews=peer_reviews,
+            quiz_responses = [
+            QuizResponse(
+                quiz_id=qr.get("quiz_id"),
+                answers=[QuizAnswer(questionId=qid, answer=ans) for qid, ans in qr.get("answers", {}).items()]
+            )
+            for qr in user.get("quiz_responses", [])
+        ]
         )
 
     @strawberry.field
@@ -134,13 +159,21 @@ class Query:
         quizzes = db.quizzes.find()
         result = []
         for quiz in quizzes:
-            questions = [Question(**q) for q in quiz.get("questions", [])]
+            questions = [
+                Question(
+                    questionId=q.get("questionId") or q.get("question_id"),
+                    text=q.get("text"),
+                    options=q.get("options", []),
+                    correctAnswer=q.get("correctAnswer") or q.get("correct_answer")
+                )
+                for q in quiz.get("questions", [])
+            ]
             result.append(Quiz(
                 id=str(quiz["_id"]),
-                quizName=quiz["quizName"],
-                description=quiz["description"],
+                quizName=quiz.get("quizName") or quiz.get("quiz_name"),
+                description=quiz.get("description"),
                 questions=questions,
-                evaluationType=quiz.get("evaluationType", "manual")
+                evaluationType=quiz.get("evaluationType") or quiz.get("evaluation_type", "manual")
             ))
         return result
 
@@ -233,15 +266,20 @@ class Mutation:
         evaluation = evaluate_quiz_with_gemini(quiz_name, user_answers)
         db.users.update_one(
             {"_id": str(user_id)},
-            {"$push": {"quiz_results": {
-                "quiz_id": str(quiz_id),
-                "score": evaluation["score"],
-                "feedback": evaluation["feedback"],
-                "answers": user_answers
-            }}}
+            {"$push": {
+                "quiz_results": {
+                    "quiz_id": str(quiz_id),
+                    "score": evaluation["score"],
+                    "feedback": evaluation["feedback"],
+                    "answers": user_answers
+                },
+                "quiz_responses": {
+                    "quiz_id": str(quiz_id),
+                    "answers": user_answers
+                }
+            }}
         )
         return QuizEvaluation(score=evaluation["score"], feedback=evaluation["feedback"])
-
     @strawberry.mutation
     def submit_peer_review(
         self,
