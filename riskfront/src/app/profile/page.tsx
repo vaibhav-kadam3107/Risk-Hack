@@ -105,7 +105,7 @@ export default function ProfilePage() {
             stats: [
               { label: "Total Quizzes", value: String(dev.testsTaken?.length || 0), icon: Target },
               { label: "High Score", value: `${dev.highScore || 0}`, icon: TrendingUp },
-              { label: "Global Rank", value: `${dev.rank || 0}`, icon: Trophy },
+              // { label: "Global Rank", value: `${dev.rank || 0}`, icon: Trophy },
               {
                 label: "Badges Earned",
                 value: `${badges.filter((b) => b.earned).length}/${badges.length}`,
@@ -198,7 +198,7 @@ export default function ProfilePage() {
               <h1 className="text-5xl font-black text-foreground mb-2">{userData.name}</h1>
               <p className="text-xl text-muted-foreground font-bold">{userData.team}</p>
               <div className="flex items-center gap-2 mt-2">
-                <Badge className="bg-primary text-white font-black px-3 py-1 animate-shimmer">Rank #{userData.rank}</Badge>
+                {/* <Badge className="bg-primary text-white font-black px-3 py-1 animate-shimmer">Rank #{userData.rank}</Badge> */}
                 <Badge variant="outline" className="border-2 border-primary font-black px-3 py-1">
                   {userData.totalQuizzes} Quizzes
                 </Badge>

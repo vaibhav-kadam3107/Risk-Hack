@@ -11,9 +11,6 @@ import {
   Users,
   Award,
   ArrowLeft,
-  CheckCircle2,
-  XCircle,
-  ClipboardList,
   UserCog,
   Target,
 } from "lucide-react"
@@ -36,11 +33,8 @@ export default function ItsoProfilePage() {
 
     async function fetchItsoData() {
       try {
-        // ITSO details
         const res = await axios.get(`${API_URL}/itso/${email}`)
         setItsoData(res.data)
-
-        // Developers in ITSO team
         const devRes = await axios.get(`${API_URL}/itso/${email}/devs`)
         setTeamDevs(devRes.data.developers || [])
       } catch (err) {
@@ -51,14 +45,15 @@ export default function ItsoProfilePage() {
         setLoading(false)
       }
     }
-
     fetchItsoData()
   }, [isLoaded, user])
 
   if (!isLoaded || loading) {
     return (
       <main className="min-h-screen flex items-center justify-center bg-background">
-        <p className="text-lg font-bold text-muted-foreground">Loading ITSO profile...</p>
+        <p className="text-lg font-bold text-muted-foreground animate-pulse">
+          Loading ITSO profile...
+        </p>
       </main>
     )
   }
@@ -66,137 +61,163 @@ export default function ItsoProfilePage() {
   if (!itsoData) {
     return (
       <main className="min-h-screen flex items-center justify-center bg-background">
-        <p className="text-lg font-bold text-muted-foreground">No ITSO profile found.</p>
+        <p className="text-lg font-bold text-muted-foreground">
+          No ITSO profile found.
+        </p>
       </main>
     )
   }
 
   return (
-    <main className="min-h-screen bg-background relative overflow-hidden">
+    <main className="min-h-screen bg-gradient-to-br from-background to-primary/5 relative overflow-hidden">
       {/* Navbar */}
-      <nav className="border-b-4 border-primary bg-card relative z-10 shadow-lg animate-slide-in">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between flex-wrap gap-4">
-            <Link href="/landing" className="flex items-center gap-3 md:gap-4">
-              <div className="relative">
-                <div className="w-10 h-10 md:w-12 md:h-12 bg-primary rounded-xl flex items-center justify-center transform rotate-6 hover:rotate-12 transition-transform duration-300 shadow-xl">
-                  <span className="text-white font-black text-xl md:text-2xl -rotate-6">H</span>
-                </div>
-                <div className="absolute -top-1 -right-1 w-3 h-3 md:w-4 md:h-4 bg-accent rounded-full animate-bounce" />
-              </div>
-              <div>
-                <h1 className="text-xl md:text-2xl font-black text-foreground">HSBC</h1>
-                <p className="text-xs font-bold text-primary uppercase tracking-wider">DevOps Hub</p>
-              </div>
-            </Link>
-            <div className="flex items-center gap-2 md:gap-3">
-              <ThemeToggle />
-              <Link href="/">
-                <Button variant="ghost" className="font-bold hover:scale-105 transition-transform text-sm md:text-base">
-                  <ArrowLeft className="w-4 h-4 mr-2" />
-                  <span className="hidden sm:inline">Home</span>
-                </Button>
-              </Link>
-              <Link href="/leaderboard">
-                <Button variant="ghost" className="font-bold hover:scale-105 transition-transform text-sm md:text-base">
-                  <Trophy className="w-4 h-4 mr-2 animate-wiggle" />
-                  <span className="hidden sm:inline">Leaderboard</span>
-                </Button>
-              </Link>
+      <nav className="border-b-2 border-primary/20 bg-card/60 backdrop-blur-xl shadow-lg sticky top-0 z-10">
+        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+          <Link href="/landing" className="flex items-center gap-3">
+            <div className="w-12 h-12 bg-primary rounded-xl flex items-center justify-center shadow-md hover:scale-105 transition-transform">
+              <span className="text-white font-black text-xl">H</span>
             </div>
+            <div>
+              <h1 className="text-xl font-black text-foreground">HSBC</h1>
+              <p className="text-xs font-bold text-primary uppercase">
+                DevOps Hub
+              </p>
+            </div>
+          </Link>
+          <div className="flex items-center gap-3">
+            <ThemeToggle />
+            <Link href="/">
+              <Button variant="ghost" className="font-bold">
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Home
+              </Button>
+            </Link>
+            <Link href="/leaderboard">
+              <Button variant="ghost" className="font-bold">
+                <Trophy className="w-4 h-4 mr-2" />
+                Leaderboard
+              </Button>
+            </Link>
           </div>
         </div>
       </nav>
 
       {/* Profile */}
-      <div className="container mx-auto px-4 py-8 md:py-12 relative z-10">
-        <div className="mb-12 animate-fade-in-up">
-          <div className="flex items-center gap-6 mb-6">
-            <div className="relative">
-              <div className="w-24 h-24 bg-gradient-to-br from-primary to-accent rounded-3xl flex items-center justify-center shadow-2xl animate-scale-pulse">
-                {user?.imageUrl ? (
-                  <img src={user.imageUrl} alt="Profile" className="w-full h-full rounded-3xl object-cover" />
-                ) : (
-                  <span className="text-white font-black text-4xl">{itsoData.name.charAt(0)}</span>
-                )}
-              </div>
-              <div className="absolute -bottom-2 -right-2 w-10 h-10 bg-accent rounded-full flex items-center justify-center shadow-lg animate-bounce">
-                <UserCog className="w-5 h-5 text-white" />
-              </div>
+      <div className="container mx-auto px-4 py-10">
+        <div className="flex items-center gap-6 mb-12">
+          <div className="relative">
+            <div className="w-28 h-28 rounded-3xl bg-gradient-to-br from-primary to-accent flex items-center justify-center shadow-2xl overflow-hidden">
+              {user?.imageUrl ? (
+                <img
+                  src={user.imageUrl}
+                  alt="Profile"
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <span className="text-white font-black text-4xl">
+                  {itsoData.name.charAt(0)}
+                </span>
+              )}
             </div>
-            <div>
-              <h1 className="text-5xl font-black text-foreground mb-2">{itsoData.name}</h1>
-              <p className="text-xl text-muted-foreground font-bold">{itsoData.team}</p>
-              <div className="flex items-center gap-2 mt-2">
-                <Badge className="bg-primary text-white font-black px-3 py-1 animate-shimmer">PSID {itsoData.psid}</Badge>
-                <Badge variant="outline" className="border-2 border-primary font-black px-3 py-1">
-                  {itsoData.experience} Years Experience
-                </Badge>
-              </div>
+            <div className="absolute -bottom-2 -right-2 w-10 h-10 bg-accent rounded-full flex items-center justify-center shadow-lg">
+              <UserCog className="w-5 h-5 text-white" />
+            </div>
+          </div>
+          <div>
+            <h1 className="text-4xl font-extrabold text-foreground mb-1">
+              {itsoData.name}
+            </h1>
+            <p className="text-lg text-muted-foreground font-bold">
+              {itsoData.team}
+            </p>
+            <div className="flex gap-2 mt-2 flex-wrap">
+              <Badge className="bg-primary text-white font-black">
+                PSID {itsoData.psid}
+              </Badge>
+              <Badge
+                variant="outline"
+                className="border-primary text-primary font-black"
+              >
+                {itsoData.experience} Years Experience
+              </Badge>
             </div>
           </div>
         </div>
 
         {/* Stats */}
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 mb-8 md:mb-12">
-          <Card className="p-6 border-2 hover:border-primary transition-all shadow-lg bg-card">
-            <div className="flex items-center justify-between mb-4">
-              <Users className="w-8 h-8 text-primary animate-wiggle" />
-              <span className="text-3xl font-black text-foreground">{itsoData.team}</span>
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+          <Card className="p-6 border border-primary/20 bg-card/70 backdrop-blur-md shadow-md hover:shadow-lg transition-all">
+            <div className="flex items-center justify-between">
+              <Users className="w-8 h-8 text-primary" />
+              <span className="text-xl font-bold text-foreground">
+                {itsoData.team}
+              </span>
             </div>
-            <p className="text-sm font-bold text-muted-foreground uppercase tracking-wider">Team</p>
+            <p className="text-xs font-bold text-muted-foreground mt-2">
+              Team
+            </p>
           </Card>
-          <Card className="p-6 border-2 hover:border-primary transition-all shadow-lg bg-card">
-            <div className="flex items-center justify-between mb-4">
-              <Award className="w-8 h-8 text-primary animate-wiggle" />
-              <span className="text-3xl font-black text-foreground">{itsoData.experience} yrs</span>
+          <Card className="p-6 border border-primary/20 bg-card/70 backdrop-blur-md shadow-md hover:shadow-lg transition-all">
+            <div className="flex items-center justify-between">
+              <Award className="w-8 h-8 text-primary" />
+              <span className="text-xl font-bold text-foreground">
+                {itsoData.experience} yrs
+              </span>
             </div>
-            <p className="text-sm font-bold text-muted-foreground uppercase tracking-wider">Experience</p>
+            <p className="text-xs font-bold text-muted-foreground mt-2">
+              Experience
+            </p>
           </Card>
         </div>
 
-        <Card className="p-6 md:p-8 border-2 hover:border-primary transition-all shadow-xl animate-fade-in-up bg-card mt-8">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="w-12 h-12 bg-primary rounded-xl flex items-center justify-center shadow-lg animate-scale-pulse">
-              <Users className="w-6 h-6 text-white" />
-            </div>
-            <h2 className="text-3xl font-black text-foreground">Developers in {itsoData.team}</h2>
-          </div>
+        {/* Developers */}
+        <Card className="p-6 border border-primary/20 bg-card/70 backdrop-blur-md shadow-lg mb-8">
+          <h2 className="text-2xl font-extrabold mb-6 flex items-center gap-2">
+            <Users className="w-6 h-6 text-primary" /> Developers in{" "}
+            {itsoData.team}
+          </h2>
           {teamDevs.length > 0 ? (
             <div className="grid gap-4">
               {teamDevs.map((dev, index) => (
                 <div
                   key={index}
-                  className="p-4 border-2 rounded-xl hover:border-primary transition-all hover:shadow-lg bg-gradient-to-r from-card to-primary/5"
+                  className="p-4 rounded-xl border border-primary/20 bg-gradient-to-r from-card to-primary/10 hover:scale-[1.02] transition-all shadow-sm"
                 >
                   <div className="flex justify-between items-center">
                     <div>
-                      <p className="font-black text-lg text-foreground">{dev.name}</p>
-                      <p className="text-sm text-muted-foreground font-bold">{dev.designation}</p>
+                      <p className="font-bold text-lg text-foreground">
+                        {dev.name}
+                      </p>
+                      <p className="text-xs text-muted-foreground font-bold">
+                        {dev.designation}
+                      </p>
                     </div>
-                    <Badge className="bg-primary text-white font-black">High Score : {dev.highScore || 0}</Badge>
+                    <Badge className="bg-primary text-white font-black">
+                      High Score : {dev.highScore || 0}
+                    </Badge>
                   </div>
                 </div>
               ))}
             </div>
           ) : (
-            <p className="text-muted-foreground font-bold">No developers found in this team</p>
+            <p className="text-muted-foreground font-bold">
+              No developers found
+            </p>
           )}
         </Card>
 
         {/* Team Test History */}
-        <Card className="p-6 md:p-8 border-2 hover:border-primary transition-all shadow-xl animate-fade-in-up bg-card mt-8">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="w-12 h-12 bg-primary rounded-xl flex items-center justify-center shadow-lg animate-scale-pulse">
-              <Target className="w-6 h-6 text-white" />
-            </div>
-            <h2 className="text-3xl font-black text-foreground">Team’s Test History</h2>
-          </div>
-
+        <Card className="p-6 border border-primary/20 bg-card/70 backdrop-blur-md shadow-lg">
+          <h2 className="text-2xl font-extrabold mb-6 flex items-center gap-2">
+            <Target className="w-6 h-6 text-primary" /> Team’s Test History
+          </h2>
           {teamDevs.length > 0 ? (
             <div className="space-y-6">
               {teamDevs.map((dev, dIndex) => (
-                <div key={dIndex} className="p-4 border-2 rounded-xl bg-card hover:border-primary transition-all">
+                <div
+                  key={dIndex}
+                  className="p-4 border rounded-xl bg-gradient-to-r from-card to-primary/5 hover:scale-[1.01] transition-all shadow-sm"
+                >
                   <p className="font-black text-lg mb-3">
                     {dev.name} ({dev.designation})
                   </p>
@@ -205,29 +226,35 @@ export default function ItsoProfilePage() {
                       {dev.testsTaken.map((test: any, tIndex: number) => (
                         <div
                           key={tIndex}
-                          className="p-3 border rounded-lg bg-gradient-to-r from-card to-primary/5"
+                          className="p-3 border rounded-lg bg-card/80"
                         >
                           <div className="flex items-center justify-between mb-2">
-                            <div>
-                              <p className="font-bold text-foreground text-sm">{test.quizTitle}</p>
-                            </div>
-                            <div className="text-right">
-                              <span className="text-lg font-black text-primary">Score : {test.score}</span>
-                              <p className="text-xs font-bold text-muted-foreground">{new Date(test.takenAt).toLocaleDateString()}</p>
-                            </div>
+                            <p className="font-bold text-sm text-foreground">
+                              {test.quizTitle}
+                            </p>
+                            <span className="text-sm font-black text-primary">
+                              {test.score}/40
+                            </span>
                           </div>
-                          <Progress value={test.score} className="h-2 animate-shimmer" />
+                          <Progress
+                            value={(test.score / 40) * 100}
+                            className="h-2"
+                          />
                         </div>
                       ))}
                     </div>
                   ) : (
-                    <p className="text-sm text-muted-foreground">No tests taken yet</p>
+                    <p className="text-sm text-muted-foreground">
+                      No tests taken yet
+                    </p>
                   )}
                 </div>
               ))}
             </div>
           ) : (
-            <p className="text-muted-foreground font-bold">No developers found in this team</p>
+            <p className="text-muted-foreground font-bold">
+              No test data found
+            </p>
           )}
         </Card>
       </div>

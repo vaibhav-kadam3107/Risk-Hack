@@ -225,21 +225,32 @@ app.get("/api/quizzes", async (req, res) => {
 app.post("/api/quizzes/:id/review", async (req, res) => {
   try {
     const { id } = req.params
-    const { reviewerName, reviewerEmail, content, remarks } = req.body
+    const {
+      reviewerName,
+      reviewerEmail,
+      reviewerImage,
+      reviewerRole,
+      content,
+      attachments,
+    } = req.body
 
+    // ✅ Validation
     if (!reviewerName || !reviewerEmail || !content) {
       return res.status(400).json({ error: "Missing required fields" })
     }
 
+    // ✅ Create review object
     const review = {
       reviewerName,
       reviewerEmail,
-      content,
-      remarks: remarks || [],
-      createdAt: new Date()
+      reviewerImage: reviewerImage || "",
+      reviewerRole: reviewerRole || "Developer",
+      content, // 👈 Make sure content is saved
+      attachments: attachments || [],
+      createdAt: new Date(),
     }
 
-    // Push review into quiz doc
+    // ✅ Push review into quiz document
     const updatedQuiz = await Quiz.findByIdAndUpdate(
       id,
       { $push: { reviews: review } },
@@ -256,6 +267,8 @@ app.post("/api/quizzes/:id/review", async (req, res) => {
     res.status(500).json({ error: "Server error", details: err.message })
   }
 })
+
+
 
 app.get("/leaderboard", async (req, res) => {
   try {

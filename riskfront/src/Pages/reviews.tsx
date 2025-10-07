@@ -5,14 +5,17 @@ import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
-import { ArrowLeft, ArrowRight, MessageSquare } from "lucide-react"
+import { ArrowLeft, ArrowRight, MessageSquare, Paperclip } from "lucide-react"
 import { useKeenSlider } from "keen-slider/react"
 import "keen-slider/keen-slider.min.css"
 
 type Review = {
   reviewerName: string
   reviewerEmail: string
+  reviewerImage?: string
+  reviewerRole?: string
   content: string
+  attachments?: string[]
   createdAt: string
 }
 
@@ -29,15 +32,15 @@ type QuizResult = {
 
 type Props = {
   results: QuizResult[]
-  onAddReview: (quizId: string, content: string) => void
+  onAddReview: (quizId: string, content: string, files?: File[]) => void
 }
 
 export default function QuizCarousel({ results, onAddReview }: Props) {
   const [currentQuiz, setCurrentQuiz] = useState(0)
   const [reviewText, setReviewText] = useState("")
+  const [reviewFiles, setReviewFiles] = useState<File[]>([])
   const quiz = results[currentQuiz]
 
-  // Horizontal slider for questions
   const [sliderRef] = useKeenSlider<HTMLDivElement>({
     mode: "snap",
     loop: false,
@@ -86,21 +89,61 @@ export default function QuizCarousel({ results, onAddReview }: Props) {
         <h3 className="text-xl font-black text-foreground mb-3 flex items-center gap-2">
           <MessageSquare className="w-5 h-5" /> Reviews
         </h3>
+
         {quiz.reviews?.length > 0 ? (
           <div className="space-y-3">
             {quiz.reviews.map((r, i) => (
               <div
                 key={i}
-                className="p-3 border rounded-lg bg-gradient-to-r from-card to-primary/5"
+                className="p-4 border rounded-lg bg-gradient-to-r from-card to-primary/5"
               >
-                <div className="flex justify-between items-center">
-                  <p className="font-bold text-foreground">{r.reviewerName}</p>
-                  <span className="text-xs text-muted-foreground">
-                    {new Date(r.createdAt).toLocaleDateString()}
-                  </span>
+                <div className="flex items-start gap-3">
+                  {r.reviewerImage && (
+                    <img
+                      src={r.reviewerImage}
+                      alt={r.reviewerName}
+                      className="w-10 h-10 rounded-full border-2 border-primary"
+                    />
+                  )}
+                  <div className="flex-1">
+                    <div className="flex justify-between items-center">
+                      <p className="font-bold text-foreground">{r.reviewerName}</p>
+                      <span className="text-xs text-muted-foreground">
+                        {new Date(r.createdAt).toLocaleDateString()}
+                      </span>
+                    </div>
+                    <p className="text-xs text-muted-foreground">{r.reviewerEmail}</p>
+                    {r.reviewerRole && (
+                      <p className="text-xs font-bold text-primary">{r.reviewerRole}</p>
+                    )}
+
+                    {/* ✅ Review Content */}
+                    {r.content && (
+                      <p className="mt-2 text-sm text-foreground">{r.content}</p>
+                    )}
+
+                    {/* ✅ Attachments */}
+                    {r.attachments && r.attachments.length > 0 && (
+                      <div className="mt-3 flex flex-col gap-1">
+                        <p className="text-xs font-bold text-muted-foreground uppercase">
+                          Attachments:
+                        </p>
+                        {r.attachments.map((fileUrl, idx) => (
+                          <a
+                            key={idx}
+                            href={fileUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-sm text-blue-600 hover:underline flex items-center gap-2"
+                          >
+                            <Paperclip className="w-4 h-4" />
+                            Attachment {idx + 1}
+                          </a>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
-                <p className="text-xs text-muted-foreground">{r.reviewerEmail}</p>
-                <p className="mt-2 text-sm text-foreground">{r.content}</p>
               </div>
             ))}
           </div>
@@ -109,17 +152,26 @@ export default function QuizCarousel({ results, onAddReview }: Props) {
         )}
 
         {/* Add Review */}
-        <div className="flex gap-2 mt-4">
+        <div className="flex flex-col gap-3 mt-4">
           <Input
             placeholder="Add your review..."
             value={reviewText}
             onChange={(e) => setReviewText(e.target.value)}
           />
+          <input
+            type="file"
+            multiple
+            onChange={(e) =>
+              setReviewFiles(e.target.files ? Array.from(e.target.files) : [])
+            }
+            className="text-sm text-muted-foreground"
+          />
           <Button
             onClick={() => {
               if (reviewText.trim() !== "") {
-                onAddReview(quiz._id, reviewText)
+                onAddReview(quiz._id, reviewText, reviewFiles)
                 setReviewText("")
+                setReviewFiles([])
               }
             }}
             className="bg-primary text-white font-bold"
@@ -129,7 +181,7 @@ export default function QuizCarousel({ results, onAddReview }: Props) {
         </div>
       </Card>
 
-      {/* Carousel Controls for Quiz Results */}
+      {/* Carousel Controls */}
       <div className="flex justify-between items-center">
         <Button
           variant="outline"
@@ -144,9 +196,7 @@ export default function QuizCarousel({ results, onAddReview }: Props) {
         </span>
         <Button
           variant="outline"
-          onClick={() =>
-            setCurrentQuiz((c) => (c + 1) % results.length)
-          }
+          onClick={() => setCurrentQuiz((c) => (c + 1) % results.length)}
         >
           Next Quiz <ArrowRight className="w-4 h-4 ml-2" />
         </Button>
