@@ -1,3 +1,7 @@
+"use client"
+
+import { useEffect, useState } from "react"
+import axios from "axios"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
@@ -6,80 +10,18 @@ import { Trophy, Medal, ArrowLeft, TrendingUp, Zap, Target } from "lucide-react"
 import { ThemeToggle } from "@/Pages/theme-toggle"
 
 export default function LeaderboardPage() {
-  const leaderboardData = [
-    {
-      rank: 1,
-      name: "Sarah Chen",
-      team: "Cloud Infrastructure",
-      score: 95,
-      quizzes: 15,
-      trend: "up",
-      badge: "Elite",
-    },
-    {
-      rank: 2,
-      name: "Michael Rodriguez",
-      team: "DevOps Engineering",
-      score: 92,
-      quizzes: 18,
-      trend: "up",
-      badge: "Elite",
-    },
-    {
-      rank: 3,
-      name: "Emily Watson",
-      team: "Platform Engineering",
-      score: 90,
-      quizzes: 14,
-      trend: "same",
-      badge: "Elite",
-    },
-    {
-      rank: 4,
-      name: "David Kim",
-      team: "Site Reliability",
-      score: 88,
-      quizzes: 16,
-      trend: "up",
-      badge: "High",
-    },
-    {
-      rank: 5,
-      name: "Alex Johnson",
-      team: "Platform Engineering",
-      score: 82,
-      quizzes: 12,
-      trend: "down",
-      badge: "High",
-    },
-    {
-      rank: 6,
-      name: "Jessica Lee",
-      team: "Cloud Infrastructure",
-      score: 80,
-      quizzes: 11,
-      trend: "up",
-      badge: "High",
-    },
-    {
-      rank: 7,
-      name: "Ryan Patel",
-      team: "DevOps Engineering",
-      score: 78,
-      quizzes: 13,
-      trend: "same",
-      badge: "Medium",
-    },
-    {
-      rank: 8,
-      name: "Sophie Turner",
-      team: "Site Reliability",
-      score: 75,
-      quizzes: 10,
-      trend: "up",
-      badge: "Medium",
-    },
-  ]
+  const [leaderboardData, setLeaderboardData] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+
+  const API_URL = "http://localhost:2413" // backend
+
+  useEffect(() => {
+    axios
+      .get(`${API_URL}/leaderboard`)
+      .then(res => setLeaderboardData(res.data))
+      .catch(err => console.error("Error fetching leaderboard:", err))
+      .finally(() => setLoading(false))
+  }, [])
 
   const getRankIcon = (rank: number) => {
     if (rank === 1) return <Trophy className="w-6 h-6 text-yellow-500" />
@@ -95,6 +37,14 @@ export default function LeaderboardPage() {
     return "from-card to-primary/5 border-border"
   }
 
+  if (loading) {
+    return (
+      <main className="min-h-screen flex items-center justify-center bg-background">
+        <p className="text-lg font-bold text-muted-foreground">Loading leaderboard...</p>
+      </main>
+    )
+  }
+
   return (
     <main className="min-h-screen bg-background relative overflow-hidden">
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -106,10 +56,11 @@ export default function LeaderboardPage() {
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] border-2 border-primary/10 rounded-full animate-rotate-slow" />
       </div>
 
+      {/* Navbar (unchanged) */}
       <nav className="border-b-4 border-primary bg-card relative z-10 shadow-lg animate-slide-in">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between flex-wrap gap-4">
-            <Link href="/landing" className="flex items-center gap-3 md:gap-4">
+            <Link href="/" className="flex items-center gap-3 md:gap-4">
               <div className="relative">
                 <div className="w-10 h-10 md:w-12 md:h-12 bg-primary rounded-xl flex items-center justify-center transform rotate-6 hover:rotate-12 transition-transform duration-300 shadow-xl">
                   <span className="text-white font-black text-xl md:text-2xl -rotate-6">H</span>
@@ -123,15 +74,10 @@ export default function LeaderboardPage() {
             </Link>
             <div className="flex items-center gap-2 md:gap-3">
               <ThemeToggle />
-              <Link href="/landing">
+              <Link href="/">
                 <Button variant="ghost" className="font-bold hover:scale-105 transition-transform text-sm md:text-base">
                   <ArrowLeft className="w-4 h-4 mr-2" />
                   <span className="hidden sm:inline">Home</span>
-                </Button>
-              </Link>
-              <Link href="/profile">
-                <Button variant="ghost" className="font-bold hover:scale-105 transition-transform text-sm md:text-base">
-                  Profile
                 </Button>
               </Link>
               <Link href="/">
@@ -160,6 +106,7 @@ export default function LeaderboardPage() {
           </p>
         </div>
 
+        {/* Stats section remains same */}
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 mb-8 md:mb-12">
           {[
             { label: "Total Participants", value: "150", icon: Target },
@@ -184,6 +131,7 @@ export default function LeaderboardPage() {
           ))}
         </div>
 
+        {/* Leaderboard list (dynamic now) */}
         <Card className="p-8 border-2 hover:border-primary transition-all shadow-2xl animate-fade-in-up bg-card">
           <div className="space-y-4">
             {leaderboardData.map((entry, index) => (
@@ -196,14 +144,7 @@ export default function LeaderboardPage() {
               >
                 <div className="flex items-center gap-6">
                   <div className="w-16 h-16 flex items-center justify-center">
-                    {entry.rank <= 3 ? (
-                      <div className="relative animate-scale-pulse">
-                        {getRankIcon(entry.rank)}
-                        <div className="absolute -top-1 -right-1 w-3 h-3 bg-accent rounded-full animate-bounce" />
-                      </div>
-                    ) : (
-                      getRankIcon(entry.rank)
-                    )}
+                    {getRankIcon(entry.rank)}
                   </div>
 
                   <div className="flex-1">
@@ -214,8 +155,8 @@ export default function LeaderboardPage() {
                           entry.badge === "Elite"
                             ? "bg-primary text-white"
                             : entry.badge === "High"
-                              ? "bg-accent text-white"
-                              : "bg-muted text-muted-foreground"
+                            ? "bg-accent text-white"
+                            : "bg-muted text-muted-foreground"
                         } animate-shimmer`}
                       >
                         {entry.badge}
@@ -226,7 +167,7 @@ export default function LeaderboardPage() {
 
                   <div className="flex items-center gap-8">
                     <div className="text-center">
-                      <p className="text-3xl font-black text-primary">{entry.score}%</p>
+                      <p className="text-3xl font-black text-primary">{entry.score}</p>
                       <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Score</p>
                     </div>
                     <div className="text-center">

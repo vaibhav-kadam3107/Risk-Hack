@@ -3,7 +3,7 @@
 import type React from "react"
 import { useState, useEffect } from "react"
 import axios from "axios"
-import { useUser } from "@clerk/nextjs" // Clerk hook
+import { useUser } from "@clerk/nextjs"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -18,11 +18,12 @@ import {
   DialogClose,
 } from "@/components/ui/dialog"
 import { Briefcase, Code, Send } from "lucide-react"
+import toast from "react-hot-toast"   
 
 type Role = "Developer" | "ITso"
 
 export default function RoleFormModal() {
-  const { user, isLoaded } = useUser() // Clerk user
+  const { user, isLoaded } = useUser()
   const [open, setOpen] = useState(false)
   const [selectedRole, setSelectedRole] = useState<Role>("Developer")
   const [loading, setLoading] = useState(true)
@@ -39,10 +40,9 @@ export default function RoleFormModal() {
     experience: 0,
   })
 
-  // Backend base URL
   const API_URL = "http://localhost:2413"
 
-  // ✅ Check if user is already registered using Clerk email
+  // ✅ Check if user already registered
   useEffect(() => {
     if (!isLoaded) return
     const email = user?.primaryEmailAddress?.emailAddress
@@ -55,11 +55,11 @@ export default function RoleFormModal() {
     axios
       .get(`${API_URL}/account/${email}`)
       .then(() => {
-        setOpen(false) // user exists → don't show modal
+        setOpen(false)
       })
       .catch((err) => {
         if (err.response?.status === 404) {
-          setOpen(true) // user not registered → show modal
+          setOpen(true)
         }
       })
       .finally(() => setLoading(false))
@@ -89,7 +89,7 @@ export default function RoleFormModal() {
   const currentConfig = roleConfig[selectedRole]
   const RoleIcon = currentConfig.icon
 
-  // ✅ Submit registration
+  // ✅ Submit registration with toast
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     if (!user) return
@@ -109,21 +109,20 @@ export default function RoleFormModal() {
       : []
 
     try {
-      // Step 1: Register account
       await axios.post(`${API_URL}/register/account`, {
         name,
         email,
         role: selectedRole,
       })
 
-      // Step 2: Register role-specific details
       const endpoint = selectedRole === "Developer" ? "/register/dev" : "/register/itso"
       await axios.post(`${API_URL}${endpoint}`, payload)
 
-      console.log("✅ Registered successfully")
+      toast.success("✅ Registered successfully!")
       setOpen(false)
     } catch (err: any) {
       console.error("❌ Registration failed", err.response?.data || err.message)
+      toast.error("❌ Registration failed, please try again")
     }
   }
 
@@ -155,6 +154,7 @@ export default function RoleFormModal() {
                 return (
                   <button
                     key={role}
+                    type="button"
                     onClick={() => setSelectedRole(role)}
                     className={`p-4 border-2 rounded-2xl transition-all hover:scale-105 ${
                       selectedRole === role

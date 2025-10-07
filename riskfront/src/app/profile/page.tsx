@@ -15,16 +15,36 @@ import {
   Award,
   Zap,
   ArrowLeft,
-  Star,
+  Eye,
   CheckCircle2,
   XCircle,
+  Moon,
 } from "lucide-react"
 import { ThemeToggle } from "@/Pages/theme-toggle"
 import { useUser } from "@clerk/nextjs"
 
 type BadgeType = { name: string; icon: any; earned: boolean }
-type QuizType = { date: string; score: number; correct: number; total: number; maturity: string }
+type QuizType = { title: string; score: number; takenAt: string }
 type StatType = { label: string; value: string; icon: any }
+
+// ✅ Badge generator function
+function generateBadges(dev: any): BadgeType[] {
+  const totalQuizzes = dev.testsTaken?.length || 0
+  const highScore = dev.highScore || 0
+
+  return [
+    { name: "Quick Learner", icon: Zap, earned: totalQuizzes >= 1 },
+    { name: "Top Performer", icon: Trophy, earned: highScore >=32},
+    { name: "Consistency King", icon: Target, earned: totalQuizzes >= 5 },
+    { name: "Comeback Kid", icon: TrendingUp, earned: totalQuizzes >= 3 && highScore > 30 },
+    { name: "Badge Collector", icon: Award, earned: (dev.badges || 0) >= 3 },
+    { 
+      name: "Night Owl", 
+      icon: Moon, 
+      earned: dev.testsTaken?.some((t: any) => new Date(t.takenAt).getHours() >= 22) 
+    }
+  ]
+}
 
 export default function ProfilePage() {
   const { user, isLoaded } = useUser()
@@ -49,7 +69,6 @@ export default function ProfilePage() {
     const email = user.primaryEmailAddress?.emailAddress
     if (!email) return
 
-    // ✅ Step 1: Get role
     axios
       .get(`${API_URL}/account/${email}`)
       .then(async (res) => {
@@ -57,36 +76,41 @@ export default function ProfilePage() {
         setRole(userRole)
 
         if (userRole === "Developer") {
-          // ✅ Step 2: Fetch developer data
           const devRes = await axios.get(`${API_URL}/dev/${email}`)
           const dev = devRes.data
 
-          // Transform API data → UI format
+          const badges = generateBadges(dev)
+
+          // ✅ Push earned badges to backend
+          const earnedBadges = badges.filter(b => b.earned).map(b => b.name)
+          await axios.post(`${API_URL}/badges/update`, {
+            email,
+            badges: earnedBadges
+          })
+
           const transformed = {
             name: user.fullName || user.username || "Developer",
             team: dev.team,
             totalQuizzes: dev.testsTaken?.length || 0,
             averageScore: dev.highScore || 0,
-            rank: dev.rank || 0, // TODO: fetch from leaderboard API
-            totalParticipants: 150, // TODO: fetch globally
-            badges: [
-              { name: "Quick Learner", icon: Zap, earned: (dev.badges || 0) >= 1 },
-              { name: "Top Performer", icon: Trophy, earned: (dev.highScore || 0) >= 85 },
-              { name: "Consistency King", icon: Target, earned: (dev.testsTaken?.length || 0) >= 5 },
-              { name: "Perfect Score", icon: Star, earned: (dev.highScore || 0) === 100 },
-            ],
-            recentQuizzes: dev.testsTaken?.slice(-3).map((test: any) => ({
-              date: test.date || "Unknown",
-              score: test.score || 0,
-              correct: test.correct || 0,
-              total: test.total || 10,
-              maturity: test.maturity || "N/A",
-            })) || [],
+            rank: dev.rank || 0,
+            totalParticipants: 150,
+            badges,
+            recentQuizzes:
+              dev.testsTaken?.slice(-3).map((test: any) => ({
+                title: test.quizTitle || "Unknown",
+                score: test.score || 0,
+                takenAt: test.takenAt,
+              })) || [],
             stats: [
               { label: "Total Quizzes", value: String(dev.testsTaken?.length || 0), icon: Target },
-              { label: "High Score", value: `${dev.highScore || 0}%`, icon: TrendingUp },
-              { label: "Global Rank", value:`${dev.rank || 0}` , icon: Trophy }, // placeholder
-              { label: "Badges Earned", value: `${dev.badges || 0}/4`, icon: Award },
+              { label: "High Score", value: `${dev.highScore || 0}`, icon: TrendingUp },
+              { label: "Global Rank", value: `${dev.rank || 0}`, icon: Trophy },
+              {
+                label: "Badges Earned",
+                value: `${badges.filter((b) => b.earned).length}/${badges.length}`,
+                icon: Award,
+              },
             ],
           }
 
@@ -94,7 +118,7 @@ export default function ProfilePage() {
         }
 
         if (userRole === "ITso") {
-          // TODO: fetch ITSO profile similarly
+          // TODO: ITSO profile fetch
         }
       })
       .catch(() => setRole(""))
@@ -119,7 +143,7 @@ export default function ProfilePage() {
 
   return (
     <main className="min-h-screen bg-background relative overflow-hidden">
-        
+      {/* NAVBAR */}
       <nav className="border-b-4 border-primary bg-card relative z-10 shadow-lg animate-slide-in">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between flex-wrap gap-4">
@@ -149,18 +173,12 @@ export default function ProfilePage() {
                   <span className="hidden sm:inline">Leaderboard</span>
                 </Button>
               </Link>
-              <Link href="/">
-                <Button className="bg-primary hover:bg-primary/90 font-black shadow-lg hover:shadow-xl transition-all hover:scale-105 text-sm md:text-base">
-                  <span className="hidden sm:inline">Take Quiz</span>
-                  <span className="sm:hidden">Quiz</span>
-                </Button>
-              </Link>
             </div>
           </div>
         </div>
       </nav>
 
-      {/* Profile */}
+      {/* PROFILE */}
       <div className="container mx-auto px-4 py-8 md:py-12 relative z-10">
         <div className="mb-12 animate-fade-in-up">
           <div className="flex items-center gap-6 mb-6">
@@ -230,15 +248,12 @@ export default function ProfilePage() {
                           <Target className="w-5 h-5 text-white" />
                         </div>
                         <div>
-                          <p className="font-black text-foreground text-lg">{quiz.date}</p>
-                          <p className="text-sm text-muted-foreground font-bold">
-                            {quiz.correct}/{quiz.total} Correct
-                          </p>
+                          <p className="font-black text-foreground text-lg">{new Date(quiz.takenAt).toLocaleDateString()}</p>
                         </div>
                       </div>
                       <div className="text-right">
-                        <p className="text-3xl font-black text-primary">{quiz.score}%</p>
-                        <Badge className="bg-accent text-white font-black mt-1">{quiz.maturity}</Badge>
+                        <p className="text-3xl font-black text-primary">Score : {quiz.score}</p>
+                        <p className="text-3xl font-black text-primary">{quiz.title}</p>
                       </div>
                     </div>
                     <Progress value={quiz.score} className="h-3 animate-shimmer" />

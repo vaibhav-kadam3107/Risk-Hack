@@ -5,7 +5,7 @@ import { useEffect, useState } from "react"
 import axios from "axios"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
-import { Trophy, Target, Zap, Users, ArrowRight, LogInIcon, LogOutIcon } from "lucide-react"
+import { Trophy, Target, Zap, Users, ArrowRight, LogInIcon, LogOutIcon , Eye } from "lucide-react"
 import { ThemeToggle } from "@/Pages/theme-toggle"
 import { SparklesCore } from "@/components/ui/sparkles"
 import { SignedOut, SignedIn, SignUpButton, SignOutButton, useUser } from "@clerk/nextjs"
@@ -37,7 +37,7 @@ export default function Home() {
             <nav className="bg-card relative z-10 shadow-lg animate-slide-in">
                 <div className="container mx-auto px-4 py-4">
                     <div className="flex items-center justify-between flex-wrap gap-4">
-                        <Link href="/landing" className="flex items-center gap-3 md:gap-4">
+                        <Link href="/" className="flex items-center gap-3 md:gap-4">
                             <div className="relative">
                                 <div className="w-10 h-10 md:w-12 md:h-12 bg-primary rounded-xl flex items-center justify-center transform rotate-6 hover:rotate-12 transition-transform duration-300 shadow-xl">
                                     <span className="text-white font-black text-xl md:text-2xl -rotate-6">H</span>
@@ -76,6 +76,13 @@ export default function Home() {
                                         </Button>
                                     </Link>
                                 )}
+
+                                <Link href="/allquiz">
+                                        <Button className="bg-primary hover:bg-primary/90 font-black shadow-lg hover:shadow-xl transition-all hover:scale-105 text-sm md:text-base">
+                                            <span className="hidden sm:inline">Review</span>
+                                            <Eye className="w-4 h-4 ml-2" />
+                                        </Button>
+                                </Link>
 
                                 {/* 🔑 User Info + Sign Out */}
                                 <div className="flex items-center gap-3 ml-4">
@@ -138,10 +145,10 @@ export default function Home() {
                 <h1
                     className="relative z-20 text-3xl md:text-6xl lg:text-7xl 
             font-bold text-center tracking-tight 
-            bg-gradient-to-r from-[#db0011] to-black 
+            bg-gradient-to-r from-[#d01928] to-[#eaadad] 
             bg-clip-text text-transparent 
             font-sans 
-            drop-shadow-[0_3px_6px_rgba(0,0,0,0.35)] 
+            drop-shadow-[0_4px_8px_rgba(0,0,0,0.35)] 
             animate-fadeGlow"
                 >
                     HSBC RISK HACK

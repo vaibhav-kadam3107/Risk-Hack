@@ -7,6 +7,7 @@ import { ClientLayout } from "./client-layout"
 import {
   ClerkProvider
 } from '@clerk/nextjs'
+import { Toaster } from "react-hot-toast"
 
 export const metadata: Metadata = {
   title: "HSBC DORA Metrics Assessment",
@@ -27,6 +28,16 @@ export default function RootLayout({
             {children}
           </ClientLayout>
         </ClerkProvider>
+        <Toaster
+          position="top-right"
+          toastOptions={{
+            style: {
+              borderRadius: "10px",
+              background: "#333",
+              color: "#fff",
+            },
+          }}
+        />
       </body>
     </html>
   )

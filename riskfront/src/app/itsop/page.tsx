@@ -153,49 +153,8 @@ export default function ItsoProfilePage() {
             </div>
             <p className="text-sm font-bold text-muted-foreground uppercase tracking-wider">Experience</p>
           </Card>
-          <Card className="p-6 border-2 hover:border-primary transition-all shadow-lg bg-card">
-            <div className="flex items-center justify-between mb-4">
-              <ClipboardList className="w-8 h-8 text-primary animate-wiggle" />
-              <span className="text-3xl font-black text-foreground">{itsoData.assignedEvaluation?.length || 0}</span>
-            </div>
-            <p className="text-sm font-bold text-muted-foreground uppercase tracking-wider">Evaluations Assigned</p>
-          </Card>
         </div>
 
-        {/* Evaluations */}
-        <Card className="p-6 md:p-8 border-2 hover:border-primary transition-all shadow-xl animate-fade-in-up bg-card">
-          {/* <div className="flex items-center gap-3 mb-6">
-            <div className="w-12 h-12 bg-primary rounded-xl flex items-center justify-center shadow-lg animate-scale-pulse">
-              <ClipboardList className="w-6 h-6 text-white" />
-            </div>
-            <h2 className="text-3xl font-black text-foreground">Assigned Evaluations</h2>
-          </div> */}
-          <div className="space-y-4">
-            {itsoData.assignedEvaluation && itsoData.assignedEvaluation.length > 0 ? (
-              itsoData.assignedEvaluation.map((evalItem: string, index: number) => (
-                <div
-                  key={index}
-                  className="p-4 border-2 rounded-xl hover:border-primary transition-all hover:shadow-lg bg-gradient-to-r from-card to-primary/5 animate-bounce-in"
-                  style={{ animationDelay: `${index * 100}ms` }}
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-accent rounded-lg flex items-center justify-center shadow-md">
-                      <CheckCircle2 className="w-5 h-5 text-white" />
-                    </div>
-                    <p className="font-black text-foreground">{evalItem}</p>
-                  </div>
-                </div>
-              ))
-            ) : (
-              <div className="p-4 border-2 rounded-xl bg-muted/20 flex items-center gap-3">
-                <XCircle className="w-5 h-5 text-muted-foreground" />
-                <p className="font-bold text-muted-foreground">No evaluations assigned</p>
-              </div>
-            )}
-          </div>
-        </Card>
-
-        {/* Developers in Team */}
         <Card className="p-6 md:p-8 border-2 hover:border-primary transition-all shadow-xl animate-fade-in-up bg-card mt-8">
           <div className="flex items-center gap-3 mb-6">
             <div className="w-12 h-12 bg-primary rounded-xl flex items-center justify-center shadow-lg animate-scale-pulse">
@@ -215,7 +174,7 @@ export default function ItsoProfilePage() {
                       <p className="font-black text-lg text-foreground">{dev.name}</p>
                       <p className="text-sm text-muted-foreground font-bold">{dev.designation}</p>
                     </div>
-                    <Badge className="bg-primary text-white font-black">{dev.highScore || 0}%</Badge>
+                    <Badge className="bg-primary text-white font-black">High Score : {dev.highScore || 0}</Badge>
                   </div>
                 </div>
               ))}
@@ -250,14 +209,11 @@ export default function ItsoProfilePage() {
                         >
                           <div className="flex items-center justify-between mb-2">
                             <div>
-                              <p className="font-bold text-foreground text-sm">{test.date}</p>
-                              <p className="text-xs text-muted-foreground">
-                                {test.correct}/{test.total} Correct
-                              </p>
+                              <p className="font-bold text-foreground text-sm">{test.quizTitle}</p>
                             </div>
                             <div className="text-right">
-                              <span className="text-lg font-black text-primary">{test.score}%</span>
-                              <p className="text-xs font-bold text-muted-foreground">{test.maturity}</p>
+                              <span className="text-lg font-black text-primary">Score : {test.score}</span>
+                              <p className="text-xs font-bold text-muted-foreground">{new Date(test.takenAt).toLocaleDateString()}</p>
                             </div>
                           </div>
                           <Progress value={test.score} className="h-2 animate-shimmer" />
